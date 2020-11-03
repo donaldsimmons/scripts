@@ -6,3 +6,6 @@
 # -r: Remove listed folders
 # -s: Set source location
 # -u: Update listed folders
+
+SOURCE=""
+ADDON_DIR=""
