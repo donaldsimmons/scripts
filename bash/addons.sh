@@ -24,16 +24,13 @@ while getopts ":abB:hrs:uU:" opt; do
   case "$opt" in
     a)
       MODES+=("a")
-      # copy from source to addon_dir
       ;;
     b)
       MODES+=("b")
-      # copy from addon_dir to addon/file_name.orig
       ;;
     B)
       MODES+=("B")
       BACKUP_DEST="$OPTARG"
-      # copy from to dest/file_name.orig
       ;;
     h)
       displayHelpMessage
@@ -41,22 +38,16 @@ while getopts ":abB:hrs:uU:" opt; do
       ;;
     r)
       MODES+=("r")
-      # generate warning message/wait for response
-      # rm from addon_dir
       ;;
     s)
       SOURCE="$OPTARG"
       ;;
     u)
       MODES+=("u")
-      # copy matching addons from addon_dir to addon/file_name.orig
-      # copy matching addons from source to addon folder
       ;;
     U)
       MODES+=("U")
       BACKUP_DEST="$OPTARG"
-      # copy matching addons from addon_dir to dest/file_name.orig
-      # copy matching addons from source to addon folder
       ;;
     \?)
       printf "%s\n" "Invalid option -$OPTARG: Use the -h flag to learn more about accepted options." >&2
@@ -73,6 +64,10 @@ shift $(($OPTIND - 1))
 if [ "$#" -eq 0 ]; then
   printf "%s\n" "Missing argument: Use the -h flag to learn about required arguments." >&2
   exit 1
+else
+  for FILE in "${@}"; do
+    FILES+=($FILE)
+  done
 fi
 
 if [ "${#MODES[@]}" -gt 1 ]; then
@@ -81,3 +76,37 @@ if [ "${#MODES[@]}" -gt 1 ]; then
 else
   MODE="${MODES[0]}"
 fi
+
+case $MODE in
+  a)
+    for FILE in "${FILES[@]}"; do
+      SOURCE_FILE="$SOURCE/$FILE"
+      DEST_FILE="$ADDON_DIR/$FILE"
+
+      `cp -R $SOURCE_FILE $DEST_FILE 2>/dev/null`
+      if [ "$?" -eq 0 ]; then
+        printf "%s\n" "$SOURCE_FILE added successfully"
+      else
+        printf "%s\n" "$FILE could not be added. Check that the addon exists and has correct permissions, or if that the source and destination are set correctly."
+      fi
+    done
+    ;;
+  b)
+    # copy from addon_dir to addon/file_name.orig
+    ;;
+  B)
+    # copy from to dest/file_name.orig
+    ;;
+  r)
+    # generate warning message/wait for response
+    # rm from addon_dir
+    ;;
+  u)
+    # copy matching addons from addon_dir to addon/file_name.orig
+    # copy matching addons from source to addon folder
+    ;;
+  U)
+    # copy matching addons from addon_dir to dest/file_name.orig
+    # copy matching addons from source to addon folder
+    ;;
+esac
