@@ -73,6 +73,8 @@ fi
 if [ "${#MODES[@]}" -gt 1 ]; then
   printf "%s\n" "Mode conflict: Only one operation mode can be chosen. Use the -h flag to learn more about mode options." >&2
   exit 1
+elif [ "${#MODES[@]}" -eq 0 ]; then
+  MODE="a"
 else
   MODE="${MODES[0]}"
 fi
