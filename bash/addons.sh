@@ -11,7 +11,6 @@
 
 SOURCE=""
 ADDON_DIR=""
-BACKUP_DIR=""
 ERROR_COUNT=0
 
 displayHelpMessage () {
@@ -46,9 +45,13 @@ addFile () {
 
 backupFile () {
   local FILE="$1"
+  local BACKUP_DEST="${2:-$ADDON_DIR}"
+
+  BACKUP_DEST="${BACKUP_DEST%/}"
+
   DATE="`date +"%Y%m%d"`"
   SOURCE_FILE="$ADDON_DIR/$FILE"
-  BACKUP_FILE="$ADDON_DIR/${FILE}_${DATE}.bkup"
+  BACKUP_FILE="$BACKUP_DEST/${FILE}_${DATE}.bkup"
 
   `cp -R $SOURCE_FILE $BACKUP_FILE 2>/dev/null`
 
@@ -57,8 +60,10 @@ backupFile () {
     return 0
   else
     ERROR_COUNT=$(($ERROR_COUNT+1))
-    if [ "${MODE}" = "b" ]; then
+    if [ "$MODE" = "b" ]; then
       printf "%s\n" "$FILE could not be backed-up. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
+    elif [ "$MODE" = "B" ]; then
+      printf "%s\n" "$FILE could not be backed-up. Check the addon and its permissions, and the chosen destination."
     fi
     return 1
   fi
@@ -72,6 +77,21 @@ removeFile () {
   else
     printf "%s\n" "$1 does not exist and could not be deleted."
     return 1
+  fi
+}
+
+updateFile () {
+  local FILE="$1"
+  local BACKUP_DEST="${2:-$ADDON_DIR}"
+
+  backupFile "$FILE" "$BACKUP_DEST"
+  local BACKUP_RESP="$?"
+  if [ "$BACKUP_RESP" -eq 1 ] && [ "$MODE" = "u" ]; then
+    printf "%s\n" "Back-up failed: $FILE was not backed up and will not be updated. Check to make sure the file exists and has correct permissions, and that the source and destination are set correctly."
+  elif [ "$BACKUP_RESP" -eq 1 ] && [ "$MODE" = "U" ]; then
+    printf "%s\n" "Back-up failed: $FILE was not backed up and will not be updated. Check the addon and its permissions, and the chosen destination."
+  else
+    addFile "$FILE"
   fi
 }
 
@@ -149,12 +169,15 @@ case $MODE in
     ;;
   b)
     for FILE in "${FILES[@]}"; do
-      backupFile $FILE
+      backupFile "$FILE"
     done
     exitWithErrorBasedStatus $ERROR_COUNT
     ;;
   B)
-    # copy from to dest/file_name.orig
+    for FILE in "${FILES[@]}"; do
+      backupFile "$FILE" "$BACKUP_DEST"
+    done
+    exitWithErrorBasedStatus $ERROR_COUNT
     ;;
   r)
     printf "%s\n" "The following add-ons were selected for deletion:"
@@ -189,17 +212,14 @@ case $MODE in
     ;;
   u)
     for FILE in "${FILES[@]}"; do
-      backupFile "$FILE"
-      if [ "$?" -eq 1 ]; then
-        printf "%s\n" "Back-up failed: $FILE was not backed up and will not be updated. Check to make sure the file exists and has correct permissions, and that the source and destination are set correctly."
-      else
-        addFile "$FILE"
-      fi
+      updateFile "$FILE"
     done
     exitWithErrorBasedStatus $ERROR_COUNT
     ;;
   U)
-    # copy matching addons from addon_dir to dest/file_name.orig
-    # copy matching addons from source to addon folder
+    for FILE in "${FILES[@]}"; do
+      updateFile "${FILES[@]}" "$BACKUP_DEST"
+    done
+    exitWithErrorBasedStatus $ERROR_COUNT
     ;;
 esac
