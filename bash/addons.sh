@@ -27,6 +27,23 @@ checkConfirmValidation () {
   fi
 }
 
+addFile () {
+  local FILE="$1"
+  SOURCE_FILE="$SOURCE/$FILE"
+  DEST_FILE="$ADDON_DIR/$FILE"
+
+  `cp -R $SOURCE_FILE $DEST_FILE 2>/dev/null`
+
+  if [ "$?" -eq 0 ]; then
+    printf "%s\n" "$SOURCE_FILE successfully added."
+    return 0
+  else
+    ERROR_COUNT=$(($ERROR_COUNT+1))
+    printf "%s\n" "$FILE could not be added. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
+    return 1
+  fi
+}
+
 backupFile () {
   local FILE="$1"
   DATE="`date +"%Y%m%d"`"
@@ -37,9 +54,13 @@ backupFile () {
 
   if [ "$?" -eq "0" ]; then
     printf "%s\n" "Back-up successful. New backup located at $BACKUP_FILE."
+    return 0
   else
     ERROR_COUNT=$(($ERROR_COUNT+1))
-    printf "%s\n" "$FILE could not be backed-up. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
+    if [ "${MODE}" = "b" ]; then
+      printf "%s\n" "$FILE could not be backed-up. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
+    fi
+    return 1
   fi
 }
 
@@ -122,16 +143,7 @@ fi
 case $MODE in
   a)
     for FILE in "${FILES[@]}"; do
-      SOURCE_FILE="$SOURCE/$FILE"
-      DEST_FILE="$ADDON_DIR/$FILE"
-
-      `cp -R $SOURCE_FILE $DEST_FILE 2>/dev/null`
-      if [ "$?" -eq 0 ]; then
-        printf "%s\n" "$SOURCE_FILE successfully added."
-      else
-        ERROR_COUNT+=1
-        printf "%s\n" "$FILE could not be added. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
-      fi
+      addFile "$FILE"
     done
     exitWithErrorBasedStatus $ERROR_COUNT
     ;;
@@ -178,10 +190,13 @@ case $MODE in
   u)
     for FILE in "${FILES[@]}"; do
       backupFile "$FILE"
+      if [ "$?" -eq 1 ]; then
+        printf "%s\n" "Back-up failed: $FILE was not backed up and will not be updated. Check to make sure the file exists and has correct permissions, and that the source and destination are set correctly."
+      else
+        addFile "$FILE"
+      fi
     done
     exitWithErrorBasedStatus $ERROR_COUNT
-
-    # copy matching addons from source to addon folder
     ;;
   U)
     # copy matching addons from addon_dir to dest/file_name.orig
