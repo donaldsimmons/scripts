@@ -89,12 +89,23 @@ case $MODE in
       if [ "$?" -eq 0 ]; then
         printf "%s\n" "$SOURCE_FILE added successfully"
       else
-        printf "%s\n" "$FILE could not be added. Check that the addon exists and has correct permissions, or if that the source and destination are set correctly."
+        printf "%s\n" "$FILE could not be added. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
       fi
     done
     ;;
   b)
-    # copy from addon_dir to addon/file_name.orig
+    for FILE in "${FILES[@]}"; do
+      DATE="`date +"%Y%m%d"`"
+      SOURCE_FILE="$ADDON_DIR/$FILE"
+      BACKUP_FILE="$ADDON_DIR/${FILE}_${DATE}.orig"
+
+      `cp -R $SOURCE_FILE $BACKUP_FILE 2>/dev/null`
+      if [ "$?" -eq "0" ]; then
+        printf "%s\n" "Back-up successful. New backup located at $BACKUP_FILE."
+      else
+        printf "%s\n" "$FILE could not be backed-up. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
+      fi
+    done
     ;;
   B)
     # copy from to dest/file_name.orig
