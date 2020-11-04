@@ -27,6 +27,22 @@ checkConfirmValidation () {
   fi
 }
 
+backupFile () {
+  local FILE="$1"
+  DATE="`date +"%Y%m%d"`"
+  SOURCE_FILE="$ADDON_DIR/$FILE"
+  BACKUP_FILE="$ADDON_DIR/${FILE}_${DATE}.bkup"
+
+  `cp -R $SOURCE_FILE $BACKUP_FILE 2>/dev/null`
+
+  if [ "$?" -eq "0" ]; then
+    printf "%s\n" "Back-up successful. New backup located at $BACKUP_FILE."
+  else
+    ERROR_COUNT=$(($ERROR_COUNT+1))
+    printf "%s\n" "$FILE could not be backed-up. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
+  fi
+}
+
 removeFile () {
   if [ -d "$1" ]; then
     `rm -rf "$1" 2>/dev/null`
@@ -121,17 +137,7 @@ case $MODE in
     ;;
   b)
     for FILE in "${FILES[@]}"; do
-      DATE="`date +"%Y%m%d"`"
-      SOURCE_FILE="$ADDON_DIR/$FILE"
-      BACKUP_FILE="$ADDON_DIR/${FILE}_${DATE}.orig"
-
-      `cp -R $SOURCE_FILE $BACKUP_FILE 2>/dev/null`
-      if [ "$?" -eq "0" ]; then
-        printf "%s\n" "Back-up successful. New backup located at $BACKUP_FILE."
-      else
-        ERROR_COUNT+=1
-        printf "%s\n" "$FILE could not be backed-up. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
-      fi
+      backupFile $FILE
     done
     exitWithErrorBasedStatus $ERROR_COUNT
     ;;
@@ -170,7 +176,11 @@ case $MODE in
     fi
     ;;
   u)
-    # copy matching addons from addon_dir to addon/file_name.orig
+    for FILE in "${FILES[@]}"; do
+      backupFile "$FILE"
+    done
+    exitWithErrorBasedStatus $ERROR_COUNT
+
     # copy matching addons from source to addon folder
     ;;
   U)
