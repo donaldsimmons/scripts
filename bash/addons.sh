@@ -12,6 +12,7 @@
 SOURCE=""
 ADDON_DIR=""
 BACKUP_DIR=""
+ERROR_COUNT=0
 
 displayHelpMessage () {
   printf "%s\n%s\n\n" "WoW AddOn Utility" "Allows manual addition, removal, back-up, and updating of WoW AddOn programs"
@@ -35,6 +36,10 @@ removeFile () {
     printf "%s\n" "$1 does not exist and could not be deleted."
     return 1
   fi
+}
+
+exitWithErrorBasedStatus () {
+   if [ "$1" -eq 0 ]; then exit 0; else exit 1; fi
 }
 
 MODES=()
@@ -108,9 +113,11 @@ case $MODE in
       if [ "$?" -eq 0 ]; then
         printf "%s\n" "$SOURCE_FILE successfully added."
       else
+        ERROR_COUNT+=1
         printf "%s\n" "$FILE could not be added. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
       fi
     done
+    exitWithErrorBasedStatus $ERROR_COUNT
     ;;
   b)
     for FILE in "${FILES[@]}"; do
@@ -122,9 +129,11 @@ case $MODE in
       if [ "$?" -eq "0" ]; then
         printf "%s\n" "Back-up successful. New backup located at $BACKUP_FILE."
       else
+        ERROR_COUNT+=1
         printf "%s\n" "$FILE could not be backed-up. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
       fi
     done
+    exitWithErrorBasedStatus $ERROR_COUNT
     ;;
   B)
     # copy from to dest/file_name.orig
@@ -152,8 +161,9 @@ case $MODE in
         REMOVED_FILE="$ADDON_DIR/$FILE"
 
         removeFile "$REMOVED_FILE"
+        if [ "$?" -eq 0]; then ERROR_COUNT+=1; fi
       done
-      exit 0
+      exitWithErrorBasedStatus $ERROR_COUNT
     elif [[ "$CONFIRM" =~ ^(n(o)?|N(no)$) ]]; then
       printf "%s\n" "Add-on removal has been cancelled."
       exit 1
