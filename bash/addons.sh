@@ -18,6 +18,25 @@ displayHelpMessage () {
   printf "%s\n" "Syntax: addons.sh {-a|-b|-B|-h|-r|-s|-u|-U} [FILE_PATHS...]"
 }
 
+checkConfirmValidation () {
+  if [[ "$1" =~ ^(y(es)?|Y(es)?|n(o)?|N(o)?)$ ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+removeFile () {
+  if [ -d "$1" ]; then
+    `rm -rf "$1" 2>/dev/null`
+    printf "%s\n" "$1 was successfully removed."
+    return 0
+  else
+    printf "%s\n" "$1 does not exist and could not be deleted."
+    return 1
+  fi
+}
+
 MODES=()
 
 while getopts ":abB:hrs:uU:" opt; do
@@ -87,7 +106,7 @@ case $MODE in
 
       `cp -R $SOURCE_FILE $DEST_FILE 2>/dev/null`
       if [ "$?" -eq 0 ]; then
-        printf "%s\n" "$SOURCE_FILE added successfully"
+        printf "%s\n" "$SOURCE_FILE successfully added."
       else
         printf "%s\n" "$FILE could not be added. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
       fi
@@ -111,8 +130,34 @@ case $MODE in
     # copy from to dest/file_name.orig
     ;;
   r)
-    # generate warning message/wait for response
-    # rm from addon_dir
+    printf "%s\n" "The following add-ons were selected for deletion:"
+    for FILE in "${FILES[@]}"; do
+      printf "%s\n" "$FILE"
+    done
+    printf "%s %s\n" "Are you sure you want to remove these add-ons?" "Y / N"
+    read CONFIRM
+
+    checkConfirmValidation "$CONFIRM"
+    CONFIRM_STATUS="$?"
+
+    while [ "$CONFIRM_STATUS" = 1 ]; do
+      printf "%s\n" "Choose yes (Y/y) to proceed with removal or no (N/n) to cancel removal."
+      read CONFIRM
+      checkConfirmValidation $CONFIRM
+      CONFIRM_STATUS="$?"
+    done
+
+    if [[ "$CONFIRM" =~ ^(y(es)?|Y(es)?)$ ]]; then
+      for FILE in "${FILES[@]}"; do
+        REMOVED_FILE="$ADDON_DIR/$FILE"
+
+        removeFile "$REMOVED_FILE"
+      done
+      exit 0
+    elif [[ "$CONFIRM" =~ ^(n(o)?|N(no)$) ]]; then
+      printf "%s\n" "Add-on removal has been cancelled."
+      exit 1
+    fi
     ;;
   u)
     # copy matching addons from addon_dir to addon/file_name.orig
