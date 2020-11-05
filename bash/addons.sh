@@ -32,10 +32,18 @@ addFile () {
   DEST_FILE="$ADDON_DIR/$FILE"
 
   `cp -R $SOURCE_FILE $DEST_FILE 2>/dev/null`
+  local ADD_RESP="$?"
 
-  if [ "$?" -eq 0 ]; then
+  if [ "$ADD_RESP" -eq 0 ]; then
     printf "%s\n" "$SOURCE_FILE successfully added."
     return 0
+  elif [ "$ADD_RESP" -eq 0 ] && [[ "$MODE" =~ (u|U) ]]; then
+    printf "%s\n" "$SOURCE_FILE successfully updated."
+    return 0
+  elif [ "$ADD_RESP" -eq 1 ] && [[ "$MODE" =~ (u|U) ]]; then
+    ERROR_COUNT=$(($ERROR_COUNT+1))
+    printf "%s\n" "$FILE could not be updated. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
+    return 1
   else
     ERROR_COUNT=$(($ERROR_COUNT+1))
     printf "%s\n" "$FILE could not be added. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
