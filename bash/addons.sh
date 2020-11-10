@@ -31,14 +31,23 @@ addFile () {
   SOURCE_FILE="$SOURCE/$FILE"
   DEST_FILE="$ADDON_DIR/$FILE"
 
-  `cp -R $SOURCE_FILE $DEST_FILE 2>/dev/null`
-  local ADD_RESP="$?"
+  if [ "$MODE" = "a" ] && [ ! -d $DEST_FILE ]; then
+    `cp -R $SOURCE_FILE $DEST_FILE 2>/dev/null`
+    local ADD_RESP="$?"
+  elif [[ "$MODE" =~ (u|U) ]]; then
+    `rm -rf $DEST_FILE && cp -R $SOURCE_FILE $DEST_FILE 2>/dev/null`
+    local ADD_RESP="$?"
+  else
+    ERROR_COUNT=$(($ERROR_COUNT+1))
+    printf "%s\n" "File exists: $DEST_FILE already exists. Use the u or U flag to overwrite files."
+    return 1
+  fi
 
-  if [ "$ADD_RESP" -eq 0 ]; then
-    printf "%s\n" "$SOURCE_FILE successfully added."
-    return 0
-  elif [ "$ADD_RESP" -eq 0 ] && [[ "$MODE" =~ (u|U) ]]; then
+  if [ "$ADD_RESP" -eq 0 ] && [[ "$MODE" =~ (u|U) ]]; then
     printf "%s\n" "$SOURCE_FILE successfully updated."
+    return 0
+  elif [ "$ADD_RESP" -eq 0 ]; then
+    printf "%s\n" "$SOURCE_FILE successfully added."
     return 0
   elif [ "$ADD_RESP" -eq 1 ] && [[ "$MODE" =~ (u|U) ]]; then
     ERROR_COUNT=$(($ERROR_COUNT+1))
@@ -94,6 +103,7 @@ updateFile () {
 
   backupFile "$FILE" "$BACKUP_DEST"
   local BACKUP_RESP="$?"
+
   if [ "$BACKUP_RESP" -eq 1 ] && [ "$MODE" = "u" ]; then
     printf "%s\n" "Back-up failed: $FILE was not backed up and will not be updated. Check to make sure the file exists and has correct permissions, and that the source and destination are set correctly."
   elif [ "$BACKUP_RESP" -eq 1 ] && [ "$MODE" = "U" ]; then
