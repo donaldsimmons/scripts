@@ -15,7 +15,17 @@ ERROR_COUNT=0
 
 displayHelpMessage () {
   printf "%s\n%s\n\n" "WoW AddOn Utility" "Allows manual addition, removal, back-up, and updating of WoW AddOn programs"
-  printf "%s\n" "Syntax: addons.sh {-a|-b|-B|-h|-r|-s|-u|-U} [FILE_PATHS...]"
+  printf "%s\n\n" "Syntax: addons.sh {-a|-b|-B|-h|-r|-s|-u|-U} [FILE_PATHS...]"
+  printf "%s\n\n" "Usage:"
+  printf "%-5s%s\n%-5s%s\n" "a" "Import new add-on directories and files." "" "Takes at least one add-on directory as an argument."
+  printf "%-5s%s\n%-5s%s\n" "b" "Back-up existing add-ons to the default add-on directory." "" "Takes at least one add-on directory as an argument."
+  printf "%-5s%s\n%-5s%s\n" "B" "Back-up existing add-ons to a custom add-on directory." "" "Takes a destination file path and at least one add-on directory as an argument."
+  printf "%-5s%s\n" "h" "Display helpful information about the WoW AddOn Utility"
+  printf "%-5s%s\n%-5s%s\n" "r" "Remove existing add-ons from the add-on directory." "" "Takes at least one add-on directory as an argument."
+  printf "%-5s%s\n%-5s%s\n%-5s%s\n" "u" "Update existing add-ons in the add-on directory." "" "Performs a '-b' backup, and overwrites existing add-on." "" "Takes at least one add-on directory as an argument."
+  printf "%-5s%s\n%-5s%s\n%-5s%s\n\n" "U" "Update existing add-ons in the add-on directory." "" "Performs a '-B' backup, and overwrites existing add-on." "" "Takes a destination file path and at least one add-on directory as an argument."
+  printf "%s\n\n" "Initial Set-Up:"
+  printf "%s\n\n" "To begin using this utility script, default source and destination locations must be added to the 'SOURCE' and 'ADDON_DIR' global variables respectively. No other set-up is required at this time."
 }
 
 checkConfirmValidation () {
@@ -132,7 +142,7 @@ while getopts ":abB:hrs:uU:" opt; do
       BACKUP_DEST="$OPTARG"
       ;;
     h)
-      displayHelpMessage
+      displayHelpMessage | less
       exit 0
       ;;
     r)
