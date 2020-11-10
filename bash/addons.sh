@@ -51,11 +51,11 @@ addFile () {
     return 0
   elif [ "$ADD_RESP" -eq 1 ] && [[ "$MODE" =~ (u|U) ]]; then
     ERROR_COUNT=$(($ERROR_COUNT+1))
-    printf "%s\n" "$FILE could not be updated. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
+    printf "%s\n%s\n" "Update failed: $FILE could not be updated." "Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
     return 1
   else
     ERROR_COUNT=$(($ERROR_COUNT+1))
-    printf "%s\n" "$FILE could not be added. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
+    printf "%s\n%s\n" "Import failed: $FILE could not be added." "Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
     return 1
   fi
 }
@@ -78,9 +78,9 @@ backupFile () {
   else
     ERROR_COUNT=$(($ERROR_COUNT+1))
     if [ "$MODE" = "b" ]; then
-      printf "%s\n" "$FILE could not be backed-up. Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
+      printf "%s\n%s\n" "Backup failed: $FILE could not be backed-up." "Check that the addon exists and has correct permissions, and that the source and destination are set correctly."
     elif [ "$MODE" = "B" ]; then
-      printf "%s\n" "$FILE could not be backed-up. Check the addon and its permissions, and the chosen destination."
+      printf "%s\n%s\n" "Backup failed: $FILE could not be backed-up." "Check the addon and its permissions, and the chosen destination."
     fi
     return 1
   fi
@@ -92,7 +92,7 @@ removeFile () {
     printf "%s\n" "$1 was successfully removed."
     return 0
   else
-    printf "%s\n" "$1 does not exist and could not be deleted."
+    printf "%s\n" "Add-on does not exist: $1 does not exist and could not be deleted."
     return 1
   fi
 }
@@ -105,9 +105,9 @@ updateFile () {
   local BACKUP_RESP="$?"
 
   if [ "$BACKUP_RESP" -eq 1 ] && [ "$MODE" = "u" ]; then
-    printf "%s\n" "Back-up failed: $FILE was not backed up and will not be updated. Check to make sure the file exists and has correct permissions, and that the source and destination are set correctly."
+    printf "%s\n%s\n" "Back-up failed: $FILE was not backed up and will not be updated." "Check to make sure the file exists and has correct permissions, and that the source and destination are set correctly."
   elif [ "$BACKUP_RESP" -eq 1 ] && [ "$MODE" = "U" ]; then
-    printf "%s\n" "Back-up failed: $FILE was not backed up and will not be updated. Check the addon and its permissions, and the chosen destination."
+    printf "%s\n%s\n" "Back-up failed: $FILE was not backed up and will not be updated." "Check the addon and its permissions, and the chosen destination."
   else
     addFile "$FILE"
   fi
