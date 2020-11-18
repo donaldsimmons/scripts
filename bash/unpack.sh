@@ -1,8 +1,25 @@
 #!/bin/bash
 
-if [ "$#" -eq 0 ]; then
+displayHelp () {
   printf "%s\n%s\n\n" "Unpack Extraction Utility" "Extract files from a variety of different compressed or packaged file types"
-  printf "%s\n\n" "Syntax: unpack.sh [FILE_PATHS...]"
+  printf "%s\n" "Syntax: unpack.sh [FILE_PATHS...]"
+}
+
+while getopts ":h" opt; do
+  case "$opt" in
+    h)
+      displayHelp
+      exit 0
+      ;;
+    \?)
+      printf "%s\n" "Invalid argument: -$OPTARG is invalid. Use -h to learn about the correct syntax."
+      exit 1
+      ;;
+  esac
+done
+
+if [ "$#" -eq 0 ]; then
+  displayHelp
   exit 1
 fi
 
@@ -28,6 +45,6 @@ for FILE in "$@"; do
       `unzip "$FILE"`;;
     *)
       EXT="${FILE##*.}"
-      printf "%s\n" "Invalid extension: .${EXT} extraction is not supported at this time."
+      printf "%s\n" "Invalid extension: .$EXT extraction is not supported at this time."
   esac
 done
