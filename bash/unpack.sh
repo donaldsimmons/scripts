@@ -43,8 +43,15 @@ for FILE in "$@"; do
       `unxz -v "$FILE"`;;
     *.zip)
       `unzip "$FILE"`;;
+    *.*)
+      EXT="${FILE#*.*}"
+      ! printf "%s\n" "Invalid extension: .$EXT extraction is not supported at this time."
+      ;;
     *)
-      EXT="${FILE##*.}"
-      printf "%s\n" "Invalid extension: .$EXT extraction is not supported at this time."
+      ! printf "%s\n" "No extension: $FILE does not have a recognized file extension."
   esac
+
+  if [ "$?" -eq 0 ]; then
+    printf "%s\n" "$FILE was successfully unpacked."
+  fi
 done
