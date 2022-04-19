@@ -16,7 +16,7 @@ def setup_parser():
   # Set URL through args as small step against misuse
   parser.add_argument("url", help="Sets URL to query for data")
   parser.add_argument("location", help="Sets phrase used to filter search by location/facility")
-  parser.add_argument( "job_title", help="Sets phrase used to search for specific positions")
+  parser.add_argument( "-j", "--job_title", help="Sets phrase used to search for specific positions")
   args = parser.parse_args()
   return args
 
@@ -51,7 +51,12 @@ def scrape_data(query_opts):
   for r in rows:
     for table_row in r:
       job_type = table_row.find('.rsbuttons + .rsbuttons + td')
-      job_name = table_row.find('td', containing=query_opts["job_title"])
+
+      if query_opts["job_title"]:
+        job_name = table_row.find('td', containing=query_opts["job_title"])
+      else:
+        job_name = table_row.find('.rsbuttons + .rsbuttons + td + td + td')
+
       if job_type and job_name:
         jobs.append({"job_type": job_type[0].text, "job_name": job_name[0].text})
   return jobs
