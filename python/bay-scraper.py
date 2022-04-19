@@ -46,16 +46,16 @@ def scrape_data(query_opts):
   results = session.run(*page_lambdas)
 
   # Drill through response arrays to build dicts w/ job name and type
-  rows = [r.html.find('tr', containing=query_opts["location"]) for r in results]
+  rows = [r.html.find("tr", containing=query_opts["location"]) for r in results]
   jobs = []
   for r in rows:
     for table_row in r:
-      job_type = table_row.find('.rsbuttons + .rsbuttons + td')
+      job_type = table_row.find(".rsbuttons + .rsbuttons + td")
 
       if query_opts["job_title"]:
-        job_name = table_row.find('td', containing=query_opts["job_title"])
+        job_name = table_row.find("td", containing=query_opts["job_title"])
       else:
-        job_name = table_row.find('.rsbuttons + .rsbuttons + td + td + td')
+        job_name = table_row.find(".rsbuttons + .rsbuttons + td + td + td")
 
       if job_type and job_name:
         jobs.append({"job_type": job_type[0].text, "job_name": job_name[0].text})
