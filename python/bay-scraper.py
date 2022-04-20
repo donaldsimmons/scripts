@@ -2,21 +2,23 @@
 
 import sys
 import argparse
+from datetime import datetime, timezone
 from requests_html import AsyncHTMLSession
 
 def main():
   args = setup_parser()
   query_data = setup_query(args)
   found_data = scrape_data(query_data)
-  display_results(query_data["location"], found_data)
+  display_results(query_data["location"], found_data, args.log)
 
-# Require script to accept URL, location and job search phrases
+# Require script to accept URL/location/job search phrases, and output format setting
 def setup_parser():
   parser = argparse.ArgumentParser()
   # Set URL through args as small step against misuse
   parser.add_argument("url", help="Sets URL to query for data")
   parser.add_argument("location", help="Sets phrase used to filter search by location/facility")
   parser.add_argument( "-j", "--job_title", help="Sets phrase used to search for specific positions")
+  parser.add_argument("-l", "--log", help="Sets output mode to handle formatting for log or console printing", action="store_true")
   args = parser.parse_args()
   return args
 
@@ -75,17 +77,23 @@ async def page(session, url, params):
     result = await session.get(full_url)
   except Exception as e:
     error_msg= "An error occurred when connecting to the given URL:"
-    print("\n{0}\n{1}\n{2}\n".format(error_msg,"-"*60,e))
+    current_utc = datetime.now(timezone.utc)
+    print("{0}\n{1}\nError Time: {2}\n\n{3}\n".format("-"*80,error_msg,current_utc,e))
     sys.exit(1)
   return result
 
 # Display results or 'no results' responses
-def display_results(location, result_data):
+def display_results(location, result_data, output_form):
+  print("{:<78}\n|{:^78}|\n{:>78}\n".format("-"*80, location, "-"*80))
   if result_data:
-    print("{:<78}\n|{:^78}|\n{:>78}\n".format("-"*80, location, "-"*80))
-    for job in result_data:
-      print("|{:<10}| {:<66}|\n".format(format_job_type(job["job_type"]), job["job_name"]))
-    print("-"*80)
+    # Check if output is formatted for log file or for console output
+    if output_form:
+      for job in result_data:
+        print("> {:<10}: {:<66}\n".format(format_job_type(job["job_type"]), job["job_name"]))
+    else:
+      for job in result_data:
+        print("|{:<10}| {:<66}|\n".format(format_job_type(job["job_type"]), job["job_name"]))
+      print("-"*80)
   else:
     print("There are no postings for " + location)
 
